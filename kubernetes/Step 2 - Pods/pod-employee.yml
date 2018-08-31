@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: employee-api
+  labels:
+    env: localkube
+    app: employee-api
+spec:
+  containers:
+  - name: employee-api
+    image: employee-api:1.0.0
+    env:
+    - name: MONGODB_HOST
+      value: mongo
+    ports:
+    - containerPort: 8000
