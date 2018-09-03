@@ -102,7 +102,7 @@ FInally, we can push the newly tagged images:
 ```bash
 docker push myprivatereg.azurecr.io/employee-api:1.0
 docker push myprivatereg.azurecr.io/company-api:1.0
-docker push myprivatereg.azurecr.io/frontend-api:1.0
+docker push myprivatereg.azurecr.io/frontend:1.0
 ```
 
 #### Give access to our registry from the Kubernetes cluster
@@ -122,4 +122,24 @@ ACR_ID=$(az acr show -n myPrivateReg -g AKSRegistry --query "id" --output tsv)
 
 # Create role assignment
 az role assignment create --assignee $CLIENT_ID --role Reader --scope $ACR_ID
+```
+
+### Running the application
+
+In order to run the application on our newly build Kubernetes cluster, we need to execute the following commands:
+
+```bash
+kubectl create -f pvc.yml # No need for a PV here as Azure handles it for us
+kubectl create -f mongo.yml # Create the mongodb statefulSet
+kubectl expose pod mongo-0 --port=27017 # Expose mongoDB in our cluster
+kubectl create company-dc.yml # Create the company API endpoint and deployment
+kubectl create employee-dc.yml # Create the employee API endpoint and deployment
+### Check ###
+kubectl rollout status deployment/company-api # To check the status of the company API
+kubectl rollout status deployment/employee-api # To check the status of the employee API
+kubectl get svc # Will display the services. Verify that you have an External IP for employee and company API
+### /Check ###
+docker build --build-arg EMPLOYEE_API=http://$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" services employee-api):8000 --build-arg COMPANY_API=http://$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" services company-api):8080 -t myprivatereg.azurecr.io/frontend:1.0 ../../frontend # Create the new frontend image referencing our APIs endpoint
+docker push myprivatereg.azurecr.io/frontend:1.0
+kubectl create -f frontend-dc.yml # Create the frontend deployment and service
 ```

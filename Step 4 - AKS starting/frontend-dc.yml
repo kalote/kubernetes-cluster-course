@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: frontend
+    env: aks
+  name: frontend
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: frontend
+  type: LoadBalancer
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+    env: aks
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3000"
+        image: myprivatereg.azurecr.io/frontend:1.0
+        imagePullPolicy: IfNotPresent
+        name: frontend
+        ports:
+        - containerPort: 3000
+        livenessProbe:
+          httpGet:
+            path: /meta/health
+            port: 3000
+        readinessProbe:
+          httpGet:
+            path: /meta/health
+            port: 3000
