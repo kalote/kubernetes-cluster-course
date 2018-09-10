@@ -7,7 +7,6 @@ As the frontend needs to know the employee and company api endpoint, we will hav
 - expose it as a service available outside of our cluster
 - create the employee-api pod
 - expose it as a service available outside of our cluster
-- build our frontend with the employee and company api endpoints
 - create the frontend pod
 - expose it as a service available outside of our cluster
 
@@ -20,6 +19,7 @@ cd kubernetes-docker-course/ # cd into the root folder
 eval $(minikube docker-env) # This command will bind the local docker with minikube
 docker build -t company-api:1.0.0 ../company-api # build our company-api image
 docker build -t employee-api:1.0.0 ../employee-api # build our employee-api image
+docker build -t frontend:1.0.0 ../frontend # build our employee-api image
 ```
 
 #### Running the company API
@@ -39,7 +39,9 @@ kubectl expose pod company-api --type=LoadBalancer # This will expose our API an
 #### Building and running the Frontend
 
 ```bash
-docker build --build-arg EMPLOYEE_API=$(minikube service employee-api --url) --build-arg COMPANY_API=$(minikube service company-api --url) -t frontend:1.0.0 ../frontend # Here we are getting the API endpoint URL and feed the docker build process with it to build our frontend app
+minikube service employee-api --url # Get the employee-api endpoint
+minikube service company-api --url # Get the company-api endpoint
+# Edit the pod-frontend.yml and add the 2 endpoint in the corresponding environment variable
 kubectl create -f pod-frontend.yml # This will create a pod running our employee API
 kubectl expose pod frontend --type=LoadBalancer # This will expose our API and make it available outside our cluster
 ```

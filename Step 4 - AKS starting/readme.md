@@ -139,7 +139,20 @@ kubectl rollout status deployment/company-api # To check the status of the compa
 kubectl rollout status deployment/employee-api # To check the status of the employee API
 kubectl get svc # Will display the services. Verify that you have an External IP for employee and company API
 ### /Check ###
-docker build --build-arg EMPLOYEE_API=http://$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" services employee-api):8000 --build-arg COMPANY_API=http://$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" services company-api):8080 -t myprivatereg.azurecr.io/frontend:1.0 ../../frontend # Create the new frontend image referencing our APIs endpoint
-docker push myprivatereg.azurecr.io/frontend:1.0
 kubectl create -f frontend-dc.yml # Create the frontend deployment and service
+kubectl set env deployment/frontend REACT_APP_EMPLOYEE_API=http://$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" services employee-api):8000 REACT_APP_COMPANY_API=http://$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" services company-api):8080 # Patch the deployment to add environment variables to access our APIs
+```
+
+### Stopping / Starting your cluster
+
+If you don't want to have your cluster running while you don't use it, you can use the following command. It will basically stop the VM were you cluster runs.
+
+```bash
+az vm deallocate --ids $(az vm list -g MC_AKSCluster_demoCluster_japaneast --query "[].id" -o tsv)
+```
+
+To start it again, run:
+
+```bash
+az vm start --ids $(az vm list -g MC_AKSCluster_demoCluster_japaneast --query "[].id" -o tsv)
 ```
